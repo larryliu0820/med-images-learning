@@ -4,7 +4,8 @@ import csv
 import zipfile
 import image_with_roi as image
 
-DATA_DIR = "data"
+DATA_DIR = "/Volumes/imaging/strokeplaque"
+
 
 class Patient:
     name = None
@@ -19,14 +20,14 @@ class Patient:
 
     def __init__(self, csv_name):
         self.csv = csv_name
-        self.name = self.csv.split('/')[1].split('-')[0]
-        self.patient_zip = DATA_DIR + "/%s.zip" % self.name.replace(' ', '_')
-        assert os.path.isfile(self.patient_zip)
+        self.name = self.csv.split('/')[-1].split('-')[0]
         self.patient_dir = DATA_DIR + "/%s/" % self.name.replace(' ', '_')
         if not os.path.isdir(self.patient_dir):
+            self.patient_zip = DATA_DIR + "/%s.zip" % self.name.replace(' ', '_')
+            assert os.path.isfile(self.patient_zip)
             zip_ref = zipfile.ZipFile(self.patient_zip, 'r')
             zip_ref.extractall(DATA_DIR + "/")
-        self.images_dir = self.patient_dir + "/"
+        self.images_dir = self.patient_dir + "/study/PLAQUE_T2_FRFSE/"
         with open(self.csv) as f:
             self.images = list()
             self.csv_reader = csv.reader(f)
