@@ -41,7 +41,7 @@ class ImageWithRoi:
         self.boundary_pts = list()
         self.row = row
         self.image_file = image_file
-        self.image_obj = dicom.read_file(self.image_file)
+        self.image_obj = dicom.read_file(self.image_file.decode('utf-8'))
         self.pts_coor_set = set()
         self.pts_coor_list = list()
         self.pts_in_roi = set()
@@ -52,7 +52,7 @@ class ImageWithRoi:
             self.data[field] = self.row[i]
         assert "RoiMean" in self.data
         self.roi_val_mean = self.data["RoiMean"]
-        if "RoiName" in self.data and self.data["RoiName"] == "reference":
+        if "RoiType" in self.data and self.data["RoiType"] == "6":
             self.is_ref = True
         self.get_boundary_pts_from_csv()
         self.find_roi_pts()
@@ -77,7 +77,7 @@ class ImageWithRoi:
             for y in range(int(self.min_y), int(self.max_y)):
                 curr_pt = pt.Point(x, y, self.ref_pt)
                 if self.point_in_roi(boundary_path, curr_pt):
-                    self.roi_val_list.append(self.get_roi_pt_val(curr_pt) / self.roi_val_mean)
+                    self.roi_val_list.append(self.get_roi_pt_val(curr_pt))
                     self.pts_in_roi.add(copy.deepcopy(curr_pt))
 
     def plot_roi(self):

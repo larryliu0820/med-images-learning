@@ -1,47 +1,47 @@
 import os
 import sys
 import csv
-import zipfile
-import image_with_roi as image
-
-DATA_DIR = "/Volumes/imaging/strokeplaque"
-
-
-class Patient:
-    name = None
-    images = None
-    csv = None
-
-    patient_zip = None
-    patient_dir = None
-    images_dir = None
-
-    csv_reader = None
-
-    def __init__(self, csv_name):
-        self.csv = csv_name
-        self.name = self.csv.split('/')[-1].split('-')[0]
-        self.patient_dir = DATA_DIR + "/%s/" % self.name.replace(' ', '_')
-        if not os.path.isdir(self.patient_dir):
-            self.patient_zip = DATA_DIR + "/%s.zip" % self.name.replace(' ', '_')
-            assert os.path.isfile(self.patient_zip)
-            zip_ref = zipfile.ZipFile(self.patient_zip, 'r')
-            zip_ref.extractall(DATA_DIR + "/")
-        self.images_dir = self.patient_dir + "/study/PLAQUE_T2_FRFSE/"
-        with open(self.csv) as f:
-            self.images = list()
-            self.csv_reader = csv.reader(f)
-            self.csv_reader.next()
-            try:
-                for row in self.csv_reader:
-                    if int(row[0])+1 < 10:
-                        name = "IM-0001-000%d.dcm"
-                    else:
-                        name = "IM-0001-00%d.dcm"
-                    image_file = self.images_dir + name % (int(row[0]) + 1)
-                    assert os.path.isfile(image_file)
-                    self.images.append(image.ImageWithRoi(row, image_file))
-            except csv.Error as e:
-                sys.exit('file %s, line %d: %s' % (self.csv, self.csv_reader.line_num, e))
+import glob
+import math
+import numpy
+import getopt
+import patient as p
 
 
+def main(argv):
+    try:
+        opts, args = getopt.getopt(argv, "hd:")
+    except getopt.GetoptError:
+        print "wtf"
+        sys.exit(2)
+    directory = None
+    for opt,arg in opts:
+        if opt == '-h':
+            print 'wtf'
+            sys.exit()
+        elif opt == '-d':
+            directory = arg
+    assert os.path.isdir(directory), "Please select a valid directory."
+    print 'Using directory %s' % directory
+    os.chdir(directory)
+    csv_files = [f for f in glob.glob('*.csv')]
+    patients = [p.Patient(cf) for cf in csv_files]
+    boundary = list()
+    for patient in patients:
+        patient.get_all_roi_val()
+        boundary += [max(patient.norm_all_roi_value), min(patient.norm_all_roi_value)]
+    min_val, max_val = min(boundary), max(boundary)
+    bins = numpy.arange(math.floor(min_val * 10) / 10, math.ceil(max_val * 10) / 10, 0.1)
+    output_file = directory + "/output.csv"
+    with open(output_file, 'a') as f:
+        writer = csv.writer(f, delimiter=',')
+        writer.writerow(["Name"] + list(bins))
+    for patient in patients:
+        patient.bins = bins
+        patient.get_histogram()
+        patient.output_csv = output_file
+        patient.write_histogram_to_csv()
+        print "Finish writing patient: %s" % patient.name
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
