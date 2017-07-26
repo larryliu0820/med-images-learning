@@ -1,11 +1,10 @@
 import copy
 import dicom
-import numpy
-import matplotlib.pyplot as plt
 import matplotlib.path as path
+import matplotlib.pyplot as plt
+import numpy
 
 import point as pt
-import util
 
 
 class ImageWithRoi:
@@ -41,7 +40,7 @@ class ImageWithRoi:
         self.boundary_pts = list()
         self.row = row
         self.image_file = image_file
-        self.image_obj = dicom.read_file(self.image_file.decode('utf-8'))
+        self.image_obj = dicom.read_file(self.image_file)
         self.pts_coor_set = set()
         self.pts_coor_list = list()
         self.pts_in_roi = set()

@@ -1,3 +1,5 @@
+#!python2
+#coding: utf8
 import os
 import sys
 import csv
@@ -20,12 +22,12 @@ def main(argv):
             print 'wtf'
             sys.exit()
         elif opt == '-d':
-            directory = arg
+            directory = arg.replace('\\', '/')
     assert os.path.isdir(directory), "Please select a valid directory."
     print 'Using directory %s' % directory
     os.chdir(directory)
-    csv_files = [f for f in glob.glob('*.csv')]
-    patients = [p.Patient(cf) for cf in csv_files]
+    csv_files = [f for f in glob.glob(u'*.csv') if u'output.csv' not in f]
+    patients = [p.Patient(directory, cf) for cf in csv_files]
     boundary = list()
     for patient in patients:
         patient.get_all_roi_val()
@@ -41,7 +43,7 @@ def main(argv):
         patient.get_histogram()
         patient.output_csv = output_file
         patient.write_histogram_to_csv()
-        print "Finish writing patient: %s" % patient.name
+        print "Finish writing patient: %s" % patient.name.encode('ascii', 'ignore').replace('=','')
 
 if __name__ == "__main__":
     main(sys.argv[1:])

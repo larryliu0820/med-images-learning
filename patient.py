@@ -7,14 +7,13 @@ import codecs
 import image_with_roi as image
 import matplotlib.pyplot as plt
 
-DATA_DIR = "/Volumes/imaging/strokeplaque/"
-
 
 class Patient:
     name = None
     images = None
     csv = None
 
+    base_dir = None
     patient_zip = None
     patient_dir = None
     images_dir = None
@@ -28,12 +27,13 @@ class Patient:
 
     output_csv = None
 
-    def __init__(self, csv_name):
-        self.csv = DATA_DIR + csv_name.replace('/', ':')
+    def __init__(self, base_dir, csv_name):
+        self.base_dir = base_dir + ('' if base_dir.endswith('/') else '/')
+        self.csv = self.base_dir + csv_name.replace('/', ':')
         self.name = self.csv.split('/')[-1].split('-')[0].replace(',', '')
         self.norm_all_roi_value = list()
-        self.patient_dir = DATA_DIR + "%s/" % self.name.replace(' ', '_')
-        assert os.path.isdir(self.patient_dir), "No image directory of patient: %s" % self.name
+        self.patient_dir = self.base_dir + "%s/" % self.name.replace(' ', '_')
+        assert os.path.isdir(self.patient_dir), "No image directory of patient: %s" % self.patient_dir.encode('utf-8')
         # if not os.path.isdir(self.patient_dir):
         #     self.patient_zip = DATA_DIR + "%s.zip" % self.name.replace(' ', '_')
         #     assert os.path.isfile(self.patient_zip)
@@ -74,7 +74,7 @@ class Patient:
 
     def write_histogram_to_csv(self):
         if not self.output_csv:
-            self.output_csv = DATA_DIR + 'output.csv'
-        with open(self.output_csv, 'a') as f:
+            self.output_csv = self.base_dir + 'output.csv'
+        with codecs.open(self.output_csv, 'a', 'utf-8') as f:
             writer = csv.writer(f, delimiter=',')
-            writer.writerow([self.name] + list(self.histogram))
+            writer.writerow([self.name.encode('ascii', 'ignore').replace('=','')] + list(self.histogram))
